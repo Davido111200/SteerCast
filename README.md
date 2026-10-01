@@ -1,6 +1,6 @@
 <div align="center">
 
-# SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting
+# (Neurips 2026) SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting
 
 Van Dai Do, Huu Hiep Nguyen, Minh Hoang Nguyen, Hung Le
 

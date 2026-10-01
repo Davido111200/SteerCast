@@ -177,7 +177,7 @@ is fine-tuned per horizon, so it always uses one database per checkpoint.
 ```bibtex
 @inproceedings{steercast2026,
   title     = {SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting},
-  author    = {Anonymous},
+  author    = {Van Dai Do, Huu Hiep Nguyen, Minh Hoang Nguyen, Hune Le},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   year      = {2026}
 }

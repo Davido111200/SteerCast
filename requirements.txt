@@ -1,0 +1,11 @@
+torch>=2.0
+transformers==4.40.1
+accelerate==0.28.0
+datasets==2.18.0
+numpy<2
+pandas
+scikit-learn
+safetensors
+huggingface_hub
+tqdm
+pyyaml

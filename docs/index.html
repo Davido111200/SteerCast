@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SteerCast</title>
+  <meta name="description" content="SteerCast improves fine-tuned decoder-only time series forecasters at inference time by retrieving latent steering vectors from similar training windows and injecting them into the hidden states during generation. NeurIPS 2026.">
+  <meta property="og:title" content="SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting">
+  <meta property="og:description" content="Inference-time latent steering for decoder-only time series forecasters, without parameter updates. NeurIPS 2026.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="static/images/overview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <span class="venue-badge">NeurIPS 2026</span>
+      <h1 class="title is-1 publication-title">SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting</h1>
+      <!-- TODO: add authors and affiliations -->
+      <p class="publication-authors">Anonymous Authors</p>
+
+      <nav class="publication-links" aria-label="Paper resources">
+        <!-- TODO: link the camera-ready paper -->
+        <a class="button is-dark is-rounded" href="#">
+          <span class="icon"><i class="fas fa-file-pdf" aria-hidden="true"></i></span><span>Paper</span>
+        </a>
+        <!-- TODO: link the arXiv page -->
+        <a class="button is-dark is-rounded" href="#">
+          <span class="icon"><i class="ai ai-arxiv" aria-hidden="true"></i></span><span>arXiv</span>
+        </a>
+        <a class="button is-dark is-rounded" href="https://github.com/Davido111200/SteerCast">
+          <span class="icon"><i class="fab fa-github" aria-hidden="true"></i></span><span>Code</span>
+        </a>
+        <a class="button is-dark is-rounded" href="#bibtex">
+          <span class="icon"><i class="fas fa-quote-right" aria-hidden="true"></i></span><span>BibTeX</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="section teaser" aria-labelledby="tldr-heading">
+  <div class="container is-max-desktop">
+    <h2 id="tldr-heading" class="visually-hidden">TL;DR</h2>
+    <p class="tldr"><strong>TL;DR.</strong> SteerCast makes an already fine-tuned decoder-only forecaster more
+      accurate at inference time: it retrieves similar training windows, averages their latent
+      <em>steering vectors</em> (ground-truth minus model-prediction representations), and adds the result to the
+      hidden states at every generation step&mdash;no gradient updates and no extra input tokens.</p>
+    <figure class="figure">
+      <a href="static/images/overview.png" class="figure-link" title="Open full-size image"><img src="static/images/overview.png" width="1895" height="603" loading="eager"
+           alt="SteerCast overview. Left: for each training window, the frozen forecaster is run on the history concatenated with its own prediction and with the ground truth; the difference of the per-layer last-token states is the steering vector. Middle: during autoregressive forecasting the aggregated steering vector is injected into the hidden states of every layer. Right: the top-k nearest training histories are retrieved and their steering vectors are averaged."></a>
+      <figcaption><strong>Figure 2.</strong> <strong>SteerCast overview.</strong> (Left) For each training example,
+        the fine-tuned forecaster \(\mathcal{F}\) produces an initial prediction; representations of
+        \([\mathbf{x}_{\text{train}};\mathbf{y}_{\text{pred}}]\) and
+        \([\mathbf{x}_{\text{train}};\mathbf{y}_{\text{train}}]\) are computed and their difference
+        is the steering vector. (Middle) During autoregressive forecasting, \(\boldsymbol{\Delta}\) is added to the
+        hidden states at every generation step. (Right) The top-\(k\) training histories closest to the query are
+        retrieved and their steering vectors averaged.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="abstract-heading">
+  <div class="container is-max-desktop">
+    <h2 id="abstract-heading" class="title is-3 has-text-centered">Abstract</h2>
+    <div class="content has-text-justified">
+      <p>Time series forecasting aims to predict future values from historical observations and auxiliary features. We propose SteerCast, a retrieval-based latent steering method that improves decoder-only forecaster at inference time, without updating its parameters. SteerCast constructs a database from the training set by storing a representation of each history window together with a steering vector computed in the forecaster&rsquo;s latent space, defined as the difference between representations induced by the ground-truth continuation and by the model&rsquo;s own prediction. At test time, SteerCast retrieves nearest neighbors for a query history, aggregates their steering vectors, and injects the resulting signal into the forecaster&rsquo;s hidden states at every step of autoregressive generation, guiding predictions toward trajectories consistent with similar training cases. Experiments across diverse multivariate benchmarks and multiple horizons show that SteerCast consistently improves forecasting accuracy over the fine-tuned backbone and retrieval-based baselines, while requiring no additional training beyond the original fine-tuning and using only the training set as a retrieval corpus.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" aria-labelledby="method-heading">
+  <div class="container is-max-desktop">
+    <h2 id="method-heading" class="title is-3 has-text-centered">Method</h2>
+
+    <figure class="figure">
+      <a href="static/images/comparison.png" class="figure-link" title="Open full-size image"><img src="static/images/comparison.png" width="1668" height="396" loading="lazy"
+           alt="Three ways to improve a decoder-based forecaster: (a) fine-tuning the model, (b) retrieval-based fine-tuning that concatenates retrieved series to the input, and (c) SteerCast, which keeps the model frozen and edits its latent space with a steering vector extracted from a SteerCast database."></a>
+      <figcaption><strong>Figure 1.</strong> Improving decoder-based forecasters by (a) model fine-tuning,
+        (b) retrieval-based fine-tuning, and (c) SteerCast, which edits the latent space of the frozen
+        fine-tuned model and needs no gradient updates.</figcaption>
+    </figure>
+
+    <div class="content method">
+      <p>Each channel of a multivariate series is forecast independently by a shared, already fine-tuned
+        decoder-only backbone \(\mathcal{F}\) (Time-MoE, Timer-XL or TimesFM). SteerCast adds two components
+        around it: a key&ndash;value memory \(\mathcal{M}\) built once from the training split, and a gated
+        update applied to the hidden states during generation.</p>
+
+      <h3 class="title is-5">1. Database construction</h3>
+      <p><strong>Retrieval key.</strong> The final-layer hidden states \(\mathbf{Z}(\mathbf{x})\in\mathbb{R}^{N_P\times d}\)
+        of the look-back window are averaged over time:</p>
+      <div class="equation">$$\mathbf{r}(\mathbf{x}) = \frac{1}{N_P}\sum_{t=1}^{N_P} \mathbf{Z}_t(\mathbf{x}) \in \mathbb{R}^{d}. \tag{1}$$</div>
+      <p><strong>Steering vector.</strong> For every training pair, the same history is continued once with the
+        model&rsquo;s own forecast \(\mathbf{y}_{\text{pred}}=\mathcal{F}(\mathbf{x}_{\text{train}})\) and once with the
+        ground truth. With \(\mathbf{h}\) the concatenation of the last-token residual-stream states of all
+        \(L\) blocks, the stored value is</p>
+      <div class="equation">$$\boldsymbol{\Delta} = \mathbf{h}\big([\mathbf{x}_{\text{train}};\mathbf{y}_{\text{train}}]\big) - \mathbf{h}\big([\mathbf{x}_{\text{train}};\mathbf{y}_{\text{pred}}]\big) = \mathbf{h}_{\text{gt}} - \mathbf{h}_{\text{pred}}. \tag{2}$$</div>
+      <p>Because both continuations share the same history, \(\boldsymbol{\Delta}\) cancels history-only content and
+        isolates the latent displacement from the model&rsquo;s trajectory to the ground-truth trajectory.</p>
+
+      <h3 class="title is-5">2. Retrieval</h3>
+      <p>At test time the query key \(\mathbf{r}_q=\mathbf{r}(\mathbf{x})\) is compared with every stored key by
+        Euclidean distance, and the steering vectors of the \(k\) nearest entries are mean-pooled:</p>
+      <div class="equation">$$\boldsymbol{\Delta}(\mathbf{x}) = \frac{1}{k}\sum_{j=1}^{k} \boldsymbol{\Delta}^{j}. \tag{3}$$</div>
+
+      <h3 class="title is-5">3. Gated injection</h3>
+      <p>For the \(f\)-th forecast token and block \(l\), a non-negative cosine gate decides <em>when</em> to steer,
+        weakening the update once the hidden state already points along the steering direction:</p>
+      <div class="equation">$$\alpha_{f,l} = b + \mathrm{ReLU}\Big(-\cos\big(\mathbf{h}_{f,l},\, \boldsymbol{\Delta}^{(l)}(\mathbf{x})\big) + m\Big)^{p}, \tag{4}$$</div>
+      <p>and each layer segment is \(\ell_2\)-normalised so that a single global strength \(\lambda\) controls <em>how much</em>
+        to steer:</p>
+      <div class="equation">$$\tilde{\mathbf{h}}_{f,l} = \mathbf{h}_{f,l} + \lambda\, \alpha_{f,l}\, \frac{\boldsymbol{\Delta}^{(l)}(\mathbf{x})}{\lVert \boldsymbol{\Delta}^{(l)}(\mathbf{x}) \rVert_2 + \epsilon}. \tag{5}$$</div>
+      <p>The per-step, per-layer perturbation is therefore bounded by \(\lambda\,(b + (1+m)^p)\) regardless of the data
+        or backbone. All main experiments use \((b, m, p) = (0.1, 0.1, 1.25)\).</p>
+    </div>
+
+    <figure class="figure">
+      <a href="static/images/concept.png" class="figure-link" title="Open full-size image"><img src="static/images/concept.png" width="2756" height="621" loading="lazy"
+           alt="Four panels: (a) a query series and the retrieved training queries that overlap with it; (b) hidden states of the input, the base prediction and the ground truth projected on two principal components, with the steering vector pointing from the base distribution to the ground-truth distribution; (c) the steering vector added to every layer of the frozen model; (d) the SteerCast prediction following the ground truth more closely than the base prediction."></a>
+      <figcaption>SteerCast at a glance: (a) retrieve training histories similar to the query; (b) the steering
+        vector points from the base-prediction representations towards the ground-truth representations;
+        (c) it is injected into every layer of the frozen forecaster; (d) the steered forecast tracks the
+        ground truth more closely than the base prediction.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="results-heading">
+  <div class="container is-max-widescreen">
+    <h2 id="results-heading" class="title is-3 has-text-centered">Results</h2>
+    <div class="container is-max-desktop">
+      <p class="content">Ten benchmarks (ETTh1/h2/m1/m2, Exchange, Weather, Illness, and the Monash series
+        US Births, SaugeenDay and Sunspots), three decoder-only backbones, horizons
+        {96, 192, 336, 720} ({24, 36, 48, 60} for Illness). The retrieval database is built from the
+        chronological training split only, hyperparameters such as \(k\) are selected on the validation split,
+        and MSE is reported on the held-out test split.</p>
+
+      <div class="highlights">
+        <div class="highlight">
+          <p class="highlight-value">25<span class="highlight-unit">/30</span></p>
+          <p class="highlight-label">dataset&ndash;backbone entries with the lowest or tied-lowest MSE (various look-back, Table 1)</p>
+        </div>
+        <div class="highlight">
+          <p class="highlight-value">24<span class="highlight-unit">/30</span></p>
+          <p class="highlight-label">entries with the lowest or tied-lowest MSE when one 512&rarr;96 database serves all horizons (Table 2)</p>
+        </div>
+        <div class="highlight">
+          <p class="highlight-value">1.12&times;</p>
+          <p class="highlight-label">inference time of the fine-tuned model, vs. 1.18&times; for RAF and 1.60&times; for RAFT (Time-MoE, Table 6)</p>
+        </div>
+        <div class="highlight">
+          <p class="highlight-value">0</p>
+          <p class="highlight-label">gradient updates and extra input tokens: the backbone stays frozen after its original fine-tuning</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs is-centered is-toggle is-small" role="tablist" aria-label="Look-back setting">
+      <ul>
+        <li class="is-active"><a role="tab" href="#table-various" aria-controls="panel-various" aria-selected="true" data-tab="panel-various">Various look-back</a></li>
+        <li><a role="tab" href="#table-fixed" aria-controls="panel-fixed" aria-selected="false" data-tab="panel-fixed">Fixed look-back (512)</a></li>
+      </ul>
+    </div>
+    <div id="panel-various" class="tab-panel" role="tabpanel">
+<p class="table-caption" id="table-various-caption"><strong>Table 1.</strong> MSE of SteerCast, fine-tuning (FT), RAF and RAFT across 10 datasets, averaged over all prediction lengths, with a look-back window that grows with the horizon (512/1024/2048/3072 for horizons 96/192/336/720). <em>Promotion</em>: % MSE reduction of SteerCast over RAFT. Bold: lowest MSE per backbone and dataset.</p>
+<div class="table-container results-table">
+  <table class="table is-narrow is-fullwidth" id="table-various" aria-describedby="table-various-caption">
+    <thead><tr><th scope="col">Backbone</th><th scope="col">Method</th><th scope="col" title="ETTh1">ETTh1</th><th scope="col" title="ETTh2">ETTh2</th><th scope="col" title="ETTm1">ETTm1</th><th scope="col" title="ETTm2">ETTm2</th><th scope="col" title="Exchange">Exch.</th><th scope="col" title="Weather">Wthr.</th><th scope="col" title="Illness">Ill.</th><th scope="col" title="US Births">Births</th><th scope="col" title="SaugeenDay">Saug.</th><th scope="col" title="Sunspots">Suns.</th></tr></thead>
+    <tbody>
+      <tr><th scope="rowgroup" rowspan="5" class="backbone">Time-MoE</th><th scope="row" class="method">FT</th><td class="num">0.389</td><td class="num">0.366</td><td class="num">0.350</td><td class="num">0.367</td><td class="num">0.428</td><td class="num best">0.241</td><td class="num">3.392</td><td class="num">0.855</td><td class="num">0.999</td><td class="num">0.429</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.398</td><td class="num">0.356</td><td class="num">0.358</td><td class="num">0.373</td><td class="num">0.440</td><td class="num">0.249</td><td class="num">3.322</td><td class="num">0.923</td><td class="num">0.996</td><td class="num">0.438</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num">0.389</td><td class="num">0.359</td><td class="num">0.349</td><td class="num">0.349</td><td class="num">0.449</td><td class="num">0.242</td><td class="num">3.279</td><td class="num">0.724</td><td class="num best">0.966</td><td class="num">0.422</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.380</td><td class="num best">0.351</td><td class="num best">0.345</td><td class="num best">0.339</td><td class="num best">0.418</td><td class="num">0.242</td><td class="num best">3.232</td><td class="num best">0.639</td><td class="num">0.983</td><td class="num best">0.420</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">2.3%</td><td class="num promo">2.2%</td><td class="num promo">1.1%</td><td class="num promo">2.8%</td><td class="num promo">6.9%</td><td class="num promo">0.0%</td><td class="num promo">1.4%</td><td class="num promo">11.7%</td><td class="num promo neg">&minus;1.8%</td><td class="num promo">0.5%</td></tr><tr><th scope="rowgroup" rowspan="5" class="backbone">Timer-XL</th><th scope="row" class="method">FT</th><td class="num best">0.681</td><td class="num">0.377</td><td class="num">0.384</td><td class="num best">0.279</td><td class="num">0.546</td><td class="num best">0.252</td><td class="num">2.894</td><td class="num">0.748</td><td class="num">1.082</td><td class="num">0.399</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.697</td><td class="num">0.424</td><td class="num">0.391</td><td class="num">0.289</td><td class="num">0.561</td><td class="num">0.262</td><td class="num">2.941</td><td class="num">0.674</td><td class="num">1.118</td><td class="num">0.395</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num">0.709</td><td class="num">0.414</td><td class="num">0.403</td><td class="num">0.304</td><td class="num">0.530</td><td class="num">0.266</td><td class="num">2.893</td><td class="num best">0.623</td><td class="num">1.033</td><td class="num best">0.391</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.681</td><td class="num best">0.372</td><td class="num best">0.381</td><td class="num">0.280</td><td class="num best">0.518</td><td class="num">0.255</td><td class="num best">2.889</td><td class="num">0.625</td><td class="num best">1.029</td><td class="num best">0.391</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">3.9%</td><td class="num promo">10.1%</td><td class="num promo">5.5%</td><td class="num promo">7.9%</td><td class="num promo">2.3%</td><td class="num promo">4.1%</td><td class="num promo">0.1%</td><td class="num promo neg">&minus;0.3%</td><td class="num promo">0.4%</td><td class="num promo">0.0%</td></tr><tr><th scope="rowgroup" rowspan="5" class="backbone">TimesFM</th><th scope="row" class="method">FT</th><td class="num">0.468</td><td class="num">0.421</td><td class="num">0.444</td><td class="num">0.310</td><td class="num">0.503</td><td class="num">0.270</td><td class="num">3.213</td><td class="num">0.667</td><td class="num">1.003</td><td class="num">0.181</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.462</td><td class="num">0.424</td><td class="num">0.437</td><td class="num">0.325</td><td class="num">0.499</td><td class="num">0.268</td><td class="num">3.156</td><td class="num">0.687</td><td class="num">1.037</td><td class="num">0.371</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num best">0.452</td><td class="num">0.424</td><td class="num">0.440</td><td class="num">0.307</td><td class="num">0.498</td><td class="num">0.264</td><td class="num">3.167</td><td class="num">0.648</td><td class="num">0.985</td><td class="num">0.173</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.452</td><td class="num best">0.409</td><td class="num best">0.434</td><td class="num best">0.302</td><td class="num best">0.485</td><td class="num best">0.255</td><td class="num best">3.083</td><td class="num best">0.538</td><td class="num best">0.956</td><td class="num best">0.171</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">0.0%</td><td class="num promo">3.6%</td><td class="num promo">1.5%</td><td class="num promo">1.4%</td><td class="num promo">2.6%</td><td class="num promo">3.4%</td><td class="num promo">2.7%</td><td class="num promo">16.9%</td><td class="num promo">2.9%</td><td class="num promo">1.2%</td></tr>
+    </tbody>
+  </table>
+</div>
+    </div>
+    <div id="panel-fixed" class="tab-panel" role="tabpanel">
+<p class="table-caption" id="table-fixed-caption"><strong>Table 2.</strong> Same comparison with the look-back window fixed to 512 for every horizon; a single database built at 512&rarr;96 is reused for all horizons. <em>Promotion</em>: % MSE reduction of SteerCast over RAFT. Bold: lowest MSE per backbone and dataset.</p>
+<div class="table-container results-table">
+  <table class="table is-narrow is-fullwidth" id="table-fixed" aria-describedby="table-fixed-caption">
+    <thead><tr><th scope="col">Backbone</th><th scope="col">Method</th><th scope="col" title="ETTh1">ETTh1</th><th scope="col" title="ETTh2">ETTh2</th><th scope="col" title="ETTm1">ETTm1</th><th scope="col" title="ETTm2">ETTm2</th><th scope="col" title="Exchange">Exch.</th><th scope="col" title="Weather">Wthr.</th><th scope="col" title="Illness">Ill.</th><th scope="col" title="US Births">Births</th><th scope="col" title="SaugeenDay">Saug.</th><th scope="col" title="Sunspots">Suns.</th></tr></thead>
+    <tbody>
+      <tr><th scope="rowgroup" rowspan="5" class="backbone">Time-MoE</th><th scope="row" class="method">FT</th><td class="num">0.407</td><td class="num">0.537</td><td class="num">0.401</td><td class="num best">0.509</td><td class="num">0.425</td><td class="num">0.237</td><td class="num">3.838</td><td class="num">1.012</td><td class="num">1.150</td><td class="num">0.566</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.400</td><td class="num">0.513</td><td class="num">0.394</td><td class="num">0.518</td><td class="num">0.431</td><td class="num">0.242</td><td class="num">3.848</td><td class="num">0.953</td><td class="num">1.139</td><td class="num">0.541</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num">0.402</td><td class="num">0.518</td><td class="num">0.391</td><td class="num">0.519</td><td class="num">0.435</td><td class="num best">0.236</td><td class="num">3.868</td><td class="num">0.851</td><td class="num best">1.106</td><td class="num">0.500</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.394</td><td class="num best">0.488</td><td class="num best">0.387</td><td class="num">0.513</td><td class="num best">0.420</td><td class="num">0.238</td><td class="num best">3.817</td><td class="num best">0.832</td><td class="num">1.124</td><td class="num best">0.483</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">2.0%</td><td class="num promo">5.8%</td><td class="num promo">1.0%</td><td class="num promo">1.2%</td><td class="num promo">3.4%</td><td class="num promo neg">&minus;0.8%</td><td class="num promo">1.3%</td><td class="num promo">2.2%</td><td class="num promo neg">&minus;1.6%</td><td class="num promo">3.4%</td></tr><tr><th scope="rowgroup" rowspan="5" class="backbone">Timer-XL</th><th scope="row" class="method">FT</th><td class="num">0.641</td><td class="num">0.394</td><td class="num">0.420</td><td class="num">0.294</td><td class="num">0.537</td><td class="num">0.248</td><td class="num best">2.524</td><td class="num">0.704</td><td class="num">1.202</td><td class="num">0.426</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.653</td><td class="num">0.400</td><td class="num">0.425</td><td class="num">0.305</td><td class="num">0.457</td><td class="num">0.265</td><td class="num">2.606</td><td class="num">0.629</td><td class="num">1.112</td><td class="num">0.410</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num">0.661</td><td class="num">0.405</td><td class="num">0.422</td><td class="num">0.309</td><td class="num">0.461</td><td class="num">0.271</td><td class="num">2.584</td><td class="num best">0.608</td><td class="num best">1.095</td><td class="num">0.413</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.624</td><td class="num best">0.386</td><td class="num best">0.418</td><td class="num best">0.292</td><td class="num best">0.436</td><td class="num best">0.246</td><td class="num">2.528</td><td class="num">0.620</td><td class="num">1.102</td><td class="num best">0.402</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">5.6%</td><td class="num promo">4.7%</td><td class="num promo">0.9%</td><td class="num promo">5.5%</td><td class="num promo">5.4%</td><td class="num promo">9.2%</td><td class="num promo">2.2%</td><td class="num promo neg">&minus;2.0%</td><td class="num promo neg">&minus;0.6%</td><td class="num promo">2.7%</td></tr><tr><th scope="rowgroup" rowspan="5" class="backbone">TimesFM</th><th scope="row" class="method">FT</th><td class="num">0.502</td><td class="num">0.399</td><td class="num">0.418</td><td class="num">0.303</td><td class="num">0.428</td><td class="num">0.223</td><td class="num">3.300</td><td class="num">0.268</td><td class="num">1.015</td><td class="num">0.338</td></tr><tr><th scope="row" class="method">RAF</th><td class="num">0.521</td><td class="num">0.383</td><td class="num">0.416</td><td class="num">0.296</td><td class="num">0.420</td><td class="num">0.221</td><td class="num">3.200</td><td class="num">0.550</td><td class="num">1.040</td><td class="num">0.323</td></tr><tr><th scope="row" class="method">RAFT</th><td class="num">0.508</td><td class="num">0.384</td><td class="num">0.412</td><td class="num">0.299</td><td class="num">0.422</td><td class="num">0.219</td><td class="num">3.250</td><td class="num">0.256</td><td class="num">0.984</td><td class="num">0.325</td></tr><tr class="ours"><th scope="row" class="method">SteerCast (ours)</th><td class="num best">0.476</td><td class="num best">0.381</td><td class="num best">0.394</td><td class="num best">0.291</td><td class="num best">0.408</td><td class="num best">0.213</td><td class="num best">3.163</td><td class="num best">0.249</td><td class="num best">0.952</td><td class="num best">0.319</td></tr><tr class="promo-row"><th scope="row" class="method">Promotion</th><td class="num promo">6.3%</td><td class="num promo">0.9%</td><td class="num promo">4.4%</td><td class="num promo">2.7%</td><td class="num promo">3.3%</td><td class="num promo">2.6%</td><td class="num promo">2.7%</td><td class="num promo">2.8%</td><td class="num promo">3.3%</td><td class="num promo">1.8%</td></tr>
+    </tbody>
+  </table>
+</div>
+    </div>
+    <p class="table-note has-text-centered">Datasets: Exch. = Exchange, Wthr. = Weather, Ill. = Illness,
+      Births = US Births, Saug. = SaugeenDay, Suns. = Sunspots. Full per-horizon MSE/MAE results are in the paper&rsquo;s appendix.</p>
+  </div>
+</section>
+
+<section class="section alt" aria-labelledby="analysis-heading">
+  <div class="container is-max-desktop">
+    <h2 id="analysis-heading" class="title is-3 has-text-centered">Analysis</h2>
+    <div class="columns is-multiline analysis-cards">
+      <div class="column is-half">
+        <div class="box">
+          <h3 class="title is-6">Steer every layer</h3>
+          <p>Injecting \(\boldsymbol{\Delta}\) into all blocks gives 0.394 average MSE on ETTh1; steering only the first,
+            middle or last block raises it by 2.0&ndash;3.0% (Table 4a).</p>
+        </div>
+      </div>
+      <div class="column is-half">
+        <div class="box">
+          <h3 class="title is-6">The gate matters at long horizons</h3>
+          <p>Replacing the cosine gate by a constant \(\alpha_{f,l}\equiv b\) degrades accuracy as the horizon grows;
+            on ETTh2 at horizon 720 the MSE rises from 0.745 to 0.920 (Table 4b, Appendix A.6).</p>
+        </div>
+      </div>
+      <div class="column is-half">
+        <div class="box">
+          <h3 class="title is-6">Steer gently</h3>
+          <p>On all four ETT datasets a small strength \(\lambda=0.01\) is best; \(\lambda=0.05\) and \(0.1\) over-correct
+            the backbone dynamics, increasingly so at longer horizons (Figure 4, left).</p>
+        </div>
+      </div>
+      <div class="column is-half">
+        <div class="box">
+          <h3 class="title is-6">A larger memory helps</h3>
+          <p>Growing the database from 10% to 100% of the training set lowers SteerCast&rsquo;s average MSE on ETTh2 from
+            0.524 to 0.488; it outperforms fine-tuning at every size, with the largest gains at 75&ndash;100% (Figure 3, right).</p>
+        </div>
+      </div>
+      <div class="column is-full">
+        <div class="box">
+          <h3 class="title is-6">Latent correction, not copied futures</h3>
+          <p>Averaging the fine-tuned forecast with the retrieved future windows in output space is worse on all nine
+            datasets tested: 0.613 vs. 0.542 average MSE for SteerCast (&minus;11.6%, Table 11).</p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="figure">
+      <a href="static/images/database.png" class="figure-link" title="Open full-size image"><img src="static/images/database.png" width="1368" height="435" loading="lazy"
+           alt="Left: average MSE over nine datasets versus prediction length for a single reused database and for per-horizon databases; the per-horizon database is increasingly better at longer horizons. Right: on ETTh2, SteerCast MSE decreases from about 0.524 to 0.488 as the database grows from 10% to 100% of the training set, staying below the fine-tune line at every size."></a>
+      <figcaption><strong>Figure 3.</strong> Database design (Time-MoE). (Left) A single reused database vs.
+        per-horizon databases. (Right) ETTh2: MSE vs. retrieval database size, with Fine-tune and RAFT as
+        horizontal baselines.</figcaption>
+    </figure>
+    <figure class="figure">
+      <a href="static/images/sensitivity.png" class="figure-link" title="Open full-size image"><img src="static/images/sensitivity.png" width="1368" height="405" loading="lazy"
+           alt="Left: average MSE across horizons on ETTh1, ETTh2, ETTm1 and ETTm2 for steering strengths 0.01, 0.05 and 0.1; error grows with the strength. Right: ETTh1 MSE versus prediction length when the retrieval key is taken from the first, middle or last layer; the last layer is lowest."></a>
+      <figcaption><strong>Figure 4.</strong> (Left) Sensitivity to the steering strength \(\lambda\).
+        (Right) ETTh1 retrieval-key layer ablation: first, middle, or last layer.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="bibtex" aria-labelledby="bibtex-heading">
+  <div class="container is-max-desktop">
+    <div class="bibtex-header">
+      <h2 id="bibtex-heading" class="title is-3">BibTeX</h2>
+      <button class="button is-small is-rounded" id="copy-bibtex" type="button" aria-label="Copy BibTeX to clipboard">
+        <span class="icon"><i class="far fa-copy" aria-hidden="true"></i></span><span>Copy</span>
+      </button>
+    </div>
+    <!-- TODO: replace "Anonymous" with the author list (and add pages/url once available) -->
+    <pre id="bibtex-text"><code>@inproceedings{steercast2026,
+  title     = {SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting},
+  author    = {Anonymous},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
+}</code></pre>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="container is-max-desktop has-text-centered">
+    <p>Website template adapted from
+      <a href="https://github.com/nerfies/nerfies.github.io" rel="noopener">Nerfies</a>,
+      licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noopener">CC BY-SA 4.0</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>

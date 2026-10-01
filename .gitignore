@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Data, checkpoints, databases and outputs
+dataset/
+checkpoints/
+cache/
+results/
+logs/
+*.pt
+*.pth
+*.safetensors
+*.npy
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

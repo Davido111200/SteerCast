@@ -40,29 +40,4 @@ document.addEventListener('DOMContentLoaded', function () {
     activate(initial);
   }
 
-  // Copy BibTeX
-  var button = document.getElementById('copy-bibtex');
-  var source = document.getElementById('bibtex-text');
-  if (button && source) {
-    button.addEventListener('click', function () {
-      var text = source.innerText;
-      var label = button.querySelector('span:last-child');
-      function done(ok) {
-        label.textContent = ok ? 'Copied' : 'Copy failed';
-        setTimeout(function () { label.textContent = 'Copy'; }, 1800);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
-      } else {
-        var area = document.createElement('textarea');
-        area.value = text;
-        document.body.appendChild(area);
-        area.select();
-        var ok = false;
-        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-        document.body.removeChild(area);
-        done(ok);
-      }
-    });
-  }
 });

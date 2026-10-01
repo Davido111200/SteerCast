@@ -168,23 +168,6 @@ body {
 .analysis-cards .box p { font-size: 0.95rem; line-height: 1.6; }
 .analysis-cards .title.is-6 { color: var(--accent); margin-bottom: 0.5rem; }
 
-/* ---------- BibTeX ---------- */
-.bibtex-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-.bibtex-header .title { margin-bottom: 0 !important; }
-#bibtex-text {
-  font-size: 0.85rem;
-  line-height: 1.55;
-  border-radius: 6px;
-  white-space: pre;
-  overflow-x: auto;
-}
-
 .footer { padding: 2rem 1.5rem; font-size: 0.85rem; color: var(--muted); }
 
 /* ---------- Small screens ---------- */

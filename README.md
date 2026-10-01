@@ -172,18 +172,6 @@ is fine-tuned per horizon, so it always uses one database per checkpoint.
 * `--fast_retrieval` computes Euclidean distances with one matrix product instead of one norm per
   entry; it is much faster on large databases but may reorder near-ties.
 
-## Citation
-
-```bibtex
-@inproceedings{steercast2026,
-  title     = {SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting},
-  author    = {Van Dai Do, Huu Hiep Nguyen, Minh Hoang Nguyen, Hung Le},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-  year      = {2026}
-}
-```
-<!-- TODO: replace the author field once the paper is de-anonymised. -->
-
 ## Acknowledgements
 
 This code builds on [Time-MoE](https://github.com/Time-MoE/Time-MoE) (model and data utilities),

@@ -2,7 +2,7 @@
 
 # SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting
 
-**NeurIPS 2026**
+**Accepted (poster) at NeurIPS 2026**
 
 <!-- TODO: add the paper link once public. -->
 [[Paper]](#) &nbsp; [[Project page]](https://davido111200.github.io/SteerCast/) &nbsp; [[Code]](https://github.com/Davido111200/SteerCast)

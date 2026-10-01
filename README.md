@@ -177,7 +177,7 @@ is fine-tuned per horizon, so it always uses one database per checkpoint.
 ```bibtex
 @inproceedings{steercast2026,
   title     = {SteerCast: Retrieval-Based Latent Steering for Decoder-Only Time Series Forecasting},
-  author    = {Van Dai Do, Huu Hiep Nguyen, Minh Hoang Nguyen, Hune Le},
+  author    = {Van Dai Do, Huu Hiep Nguyen, Minh Hoang Nguyen, Hung Le},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   year      = {2026}
 }
@@ -194,4 +194,4 @@ releasing their code and data.
 
 ## License
 
-Released under the Apache 2.0 License (see [LICENSE](LICENSE)), inherited from Time-MoE.
+Released under the Apache 2.0 License (see [LICENSE](LICENSE))

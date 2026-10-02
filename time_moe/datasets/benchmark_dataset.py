@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 _*-
-"""Benchmark datasets used by SteerCast and the baselines.
+"""Benchmark datasets used by SteerCast.
 
 All CSV benchmarks follow the standard long-term forecasting splits
 (ETT: 12/4/4 months; everything else: 70/10/20 chronological split), are
@@ -106,7 +106,7 @@ class BenchmarkEvalDataset(Dataset):
 class BenchmarkEvalDatasetTrain(Dataset):
     """Sliding windows over the (standardised) training split.
 
-    This is the retrieval corpus of SteerCast and of the retrieval baselines.
+    This is the retrieval corpus of SteerCast.
 
     Two access paths are provided and enumerate windows in the same order
     (channel-major, then time):

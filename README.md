@@ -23,8 +23,8 @@ At test time SteerCast retrieves the nearest training histories, averages their 
 and injects the result into the hidden states at every autoregressive step.
 
 This repository contains the code for SteerCast on three backbones (Time-MoE, Timer-XL and
-TimesFM 2.5), the fine-tuning scripts, the RAF and RAFT baselines, and the scripts used to
-produce the tables of the paper. The project page lives in [`docs/`](docs/).
+TimesFM 2.5), the fine-tuning scripts, and the scripts used to produce the SteerCast results
+of the paper. The project page lives in [`docs/`](docs/).
 
 ## How it works
 
@@ -52,8 +52,7 @@ run_steercast_timemoe.py      # SteerCast entry points, one per backbone
 run_steercast_timerxl.py
 run_steercast_timesfm.py
 finetune/                     # fine-tuning of the three backbones
-baselines/                    # RAF and RAFT for the three backbones
-scripts/                      # reproduction scripts (finetune / steercast / baselines)
+scripts/                      # reproduction scripts (finetune / steercast)
 time_moe/                     # Time-MoE model and data utilities (from the Time-MoE repository)
 tools/convert_monash_tsf.py   # converts Monash .tsf files to CSV
 docs/                         # project page (GitHub Pages)
@@ -151,11 +150,8 @@ bash scripts/steercast/timemoe.sh various
 bash scripts/steercast/timerxl.sh fixed  ETTh1 ETTh2      # any subset of datasets
 bash scripts/steercast/timesfm.sh various
 
-# baselines (also raf_timerxl / raf_timesfm / raft_timerxl / raft_timesfm)
-bash scripts/baselines/ft_timemoe.sh fixed
-bash scripts/baselines/raf_timemoe.sh fixed
-bash scripts/baselines/raft_timemoe.sh fixed
-LAMBDA=0 bash scripts/steercast/timerxl.sh fixed      # FT for Timer-XL (same for TimesFM)
+# fine-tuned model without steering (FT)
+LAMBDA=0 bash scripts/steercast/timemoe.sh fixed
 ```
 
 In the **fixed** protocol a single database, built for the shortest horizon, is reused for all
@@ -178,7 +174,7 @@ is fine-tuned per horizon, so it always uses one database per checkpoint.
 
 This code builds on [Time-MoE](https://github.com/Time-MoE/Time-MoE) (model and data utilities),
 [Timer-XL](https://github.com/thuml/Timer-XL), [TimesFM](https://github.com/google-research/timesfm),
-[RAFT](https://proceedings.mlr.press/v267/han25d.html), [Time-Series-Library](https://github.com/thuml/Time-Series-Library)
+[Time-Series-Library](https://github.com/thuml/Time-Series-Library)
 and the [Monash forecasting archive](https://forecastingdata.org/). We thank the authors for
 releasing their code and data.
 
